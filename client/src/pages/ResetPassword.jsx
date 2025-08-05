@@ -9,6 +9,7 @@ export default function ResetPassword() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState('validating'); // validating, valid, invalid, success
+  const [error, setError] = useState(null); // Add error state
   const { token } = useParams();
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useNotification();
@@ -44,8 +45,7 @@ export default function ResetPassword() {
     setIsSubmitting(true);
     
     try {
-      await api.post('/auth/reset-password', { 
-        token,
+      await api.post(`/auth/reset-password/${token}`, { 
         password: data.password
       });
       setStatus('success');
@@ -57,6 +57,7 @@ export default function ResetPassword() {
       }, 3000);
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to reset password. Please try again.';
+      setError(errorMessage); // Set the error state
       showError(errorMessage);
     } finally {
       setIsSubmitting(false);

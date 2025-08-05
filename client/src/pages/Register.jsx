@@ -85,8 +85,8 @@ export default function Register() {
               </div>
               <input 
                 {...register('name', { required: 'Name is required' })} 
-                className="w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                placeholder="John Doe"
+                className="w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 " 
+                placeholder="full name"
               />
             </div>
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
@@ -145,7 +145,7 @@ export default function Register() {
               <input 
                 {...register('phone', { required: 'Phone number is required' })} 
                 className="w-full pl-10 pr-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                placeholder="+1 (123) 456-7890"
+                placeholder="enter your number"
               />
             </div>
             {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}

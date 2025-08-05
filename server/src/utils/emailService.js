@@ -63,7 +63,9 @@ const sendVerificationEmail = async (email, otp) => {
 const sendPasswordResetEmail = async (email, token) => {
   // Log password reset link in development mode, but still send email
   if (process.env.NODE_ENV === 'development') {
-    console.log(`Password Reset Link: ${process.env.CLIENT_URL}/reset-password/${token}`);
+    // Ensure we're using the correct CLIENT_URL
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5174';
+    console.log(`Password Reset Link: ${clientUrl}/reset-password/${token}`);
     // We no longer return here, so emails will be sent in development too
   }
 
@@ -77,7 +79,7 @@ const sendPasswordResetEmail = async (email, token) => {
           <h2 style="color: #3b82f6; text-align: center;">Reset Your Password</h2>
           <p>We received a request to reset your password. Click the button below to create a new password:</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.CLIENT_URL}/reset-password/${token}" 
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5174'}/reset-password/${token}" 
                style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
               Reset Password
             </a>

@@ -22,6 +22,7 @@ app.use('/api/emergency', require('./routes/emergency'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/uploads', require('express').static(require('path').join(__dirname, '../../uploads')));
 app.use('/api/patient-upload', require('./routes/patientUpload'));
+app.use('/api/patient-files', require('./routes/patientRecords'));
 // Ensure /uploads/patient-docs is served
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/users', require('./routes/user'));

@@ -1,21 +1,58 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api';
 import { format } from 'date-fns';
 import { useNotification } from '../context/NotificationContext.jsx';
+import Modal from '../components/Modal.jsx';
 
 export default function DoctorDashboard() {
   const { user } = useContext(AuthContext);
   const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'past', 'cancelled', 'completed'
   const [searchTerm, setSearchTerm] = useState('');
   const { success, error: showError } = useNotification();
+  const [patientRecords, setPatientRecords] = useState({});
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showFileModal, setShowFileModal] = useState(false);
 
   // Fetch appointments for the logged-in doctor
   const { data: appointments, isLoading, error } = useQuery('doctorAppointments', async () => {
     const res = await api.get('/appointments');
     return res.data;
   });
+  
+  // Fetch all patient records with their files
+  const { data: allPatientRecords, isLoading: recordsLoading } = useQuery('patientRecords', async () => {
+    const res = await api.get('/patient-files');
+    return res.data;
+  });
+  
+  // Process patient records into a map for easy lookup
+  useEffect(() => {
+    if (allPatientRecords) {
+      const recordMap = {};
+      allPatientRecords.forEach(record => {
+        // Only add records with valid patient data
+        if (record.patient && record.patient._id) {
+          recordMap[record.patient._id] = record;
+        }
+      });
+      console.log('Patient records map:', recordMap);
+      setPatientRecords(recordMap);
+    }
+  }, [allPatientRecords]);
+  
+  // View patient file
+  const viewPatientFile = (file) => {
+    setSelectedFile(file);
+    setShowFileModal(true);
+  };
+  
+  // Close file modal
+  const closeFileModal = () => {
+    setShowFileModal(false);
+    setSelectedFile(null);
+  };
 
   // Filter appointments based on selected filter
   const filteredAppointments = appointments?.filter(appointment => {
@@ -148,6 +185,7 @@ export default function DoctorDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Files</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -176,6 +214,35 @@ export default function DoctorDashboard() {
                             'bg-blue-100 text-blue-800'}`}>
                           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {appointment.patient && patientRecords[appointment.patient._id]?.documents?.length > 0 ? (
+                          <div className="flex flex-col space-y-1">
+                            {patientRecords[appointment.patient._id].documents
+                              .filter(doc => {
+                                // Only show files uploaded by this patient (URL contains patient ID)
+                                return doc.fileUrl.includes(appointment.patient._id);
+                              })
+                              .map((doc, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => viewPatientFile(doc)}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline flex items-center text-xs"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  {doc.description || doc.filename}
+                                </button>
+                              ))
+                            }
+                            {patientRecords[appointment.patient._id].documents.filter(doc => doc.fileUrl.includes(appointment.patient._id)).length === 0 && (
+                              <span className="text-gray-400 text-xs">No patient uploads</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No file</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {appointment.status === 'booked' && (
@@ -230,6 +297,56 @@ export default function DoctorDashboard() {
           </p>
         </div>
       </div>
+      
+      {/* File Viewer Modal */}
+      {showFileModal && selectedFile && (
+        <Modal title={selectedFile.description || selectedFile.filename} onClose={closeFileModal}>
+          <div className="p-4 max-h-96 overflow-auto">
+            {/* Display file based on type */}
+            {selectedFile.fileUrl && (
+              selectedFile.fileUrl.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                <img 
+                  src={`http://localhost:8001${selectedFile.fileUrl}`} 
+                  alt={selectedFile.description || 'Patient file'} 
+                  className="max-w-full h-auto mx-auto"
+                />
+              ) : selectedFile.fileUrl.match(/\.(pdf)$/i) ? (
+                <div className="flex flex-col items-center">
+                  <p className="mb-2">PDF Document</p>
+                  <a 
+                    href={`http://localhost:8001${selectedFile.fileUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Open PDF
+                  </a>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <p className="mb-2">Document: {selectedFile.filename}</p>
+                  <a 
+                    href={`http://localhost:8001${selectedFile.fileUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Download File
+                  </a>
+                </div>
+              )
+            )}
+            {selectedFile.description && (
+              <p className="mt-4 text-gray-700">
+                <span className="font-medium">Description:</span> {selectedFile.description}
+              </p>
+            )}
+            <p className="mt-2 text-sm text-gray-500">
+              Uploaded: {selectedFile.uploadedAt ? format(new Date(selectedFile.uploadedAt), 'MMM dd, yyyy HH:mm') : 'Unknown'}
+            </p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

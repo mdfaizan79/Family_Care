@@ -4,6 +4,7 @@ import api from '../api.jsx';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { useNotification } from '../context/NotificationContext.jsx';
 import RescheduleButton from './RescheduleButton.jsx';
+import PatientFileUpload from './PatientFileUpload.jsx';
 
 function FeedbackForm({ appt, onSuccess }) {
   const [rating, setRating] = useState(5);
@@ -175,8 +176,18 @@ export default function PatientDashboard() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Appointments</h1>
-          <p className="mt-2 text-gray-600">Manage your upcoming and past appointments</p>
+          <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+          <p className="mt-2 text-gray-600">Manage your appointments and medical documents</p>
+        </div>
+        
+        {/* Medical Document Upload Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Medical Document</h2>
+          <PatientFileUpload onUpload={() => queryClient.invalidateQueries('patientDocuments')} />
+        </div>
+        
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">My Appointments</h2>
         </div>
         
         {/* Success Message */}
