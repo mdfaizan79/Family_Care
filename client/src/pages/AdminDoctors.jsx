@@ -72,7 +72,7 @@ export default function AdminDoctors() {
         setShowEditModal(false);
         setEditingDoctor(null);
         resetForm();
-        success('Doctor profile updated successfully!');
+        success('Doctor profile updated successfully!!!');
       },
       onError: (err) => {
         showError(err.response?.data?.message || 'Failed to update doctor profile. Please try again.');
@@ -103,12 +103,13 @@ export default function AdminDoctors() {
       experience: '',
       department: '',
       availability: [
+      
         { day: 'Monday', timeSlots: ['9:00 AM - 12:00 PM'] }
       ]
     });
   };
 
-  // Handle form input change
+  
   const handleChange = (e) => {
     setFormData({
       ...formData,

@@ -14,7 +14,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 async function seedUsers() {
   try {
-    // Clear existing users
+   
     await User.deleteMany({});
     console.log('Cleared existing users');
     
